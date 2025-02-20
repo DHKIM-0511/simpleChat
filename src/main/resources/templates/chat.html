@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>소켓 테스트</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sockjs-client/dist/sockjs.min.js"></script>
+  <style>
+    .chat-container {
+        max-width: 600px;
+        margin: 20px auto;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+    #messages {
+        height: 300px;
+        overflow-y: auto;
+        border: 1px solid #eee;
+        margin-bottom: 20px;
+        padding: 10px;
+        background: #f9f9f9;
+    }
+    .message-input {
+        display: flex;
+        gap: 10px;
+    }
+    #messageInput {
+        flex: 1;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    button {
+        padding: 8px 16px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    button:hover {
+        background-color: #45a049;
+    }
+    .message {
+        margin: 5px 0;
+        padding: 5px;
+        border-bottom: 1px solid #eee;
+    }
+  </style>
+</head>
+  <body>
+  <div class="chat-container">
+    <h1>소켓 테스트</h1>
+    <p><strong>로그인한 사용자:</strong> <span th:text="${user.name}"></span></p>
+
+    <!-- 메시지 표시 영역 -->
+    <div id="messages"></div>
+
+    <!-- 메시지 입력 폼 -->
+    <div class="message-input">
+      <input type="text" id="messageInput" placeholder="메시지를 입력하세요...">
+      <button onclick="sendMessage()">전송</button>
+    </div>
+  </div>
+
+  <script th:inline="javascript">
+    window.user = {
+      name: [[${user.name}]]
+    };
+  </script>
+
+    <script>
+      // WebSocket 연결 설정
+      const socket = new SockJS('http://localhost:8080/connect');
+      const stompClient = Stomp.over(socket);
+
+      // WebSocket 연결 시 수행할 작업
+      stompClient.connect({}, function (frame) {
+          console.log('Connected: ' + frame);
+
+          stompClient.subscribe('/topic/12', function (messageOutput) {
+              const messagesDiv = document.getElementById('messages');
+              const message = JSON.parse(messageOutput.body);  // 메시지를 JSON 형식으로 파싱
+
+              const messageContent = message.message;  // 'message' 필드를 가져옵니다
+              const senderName = message.senderName;  // 'senderName' 필드를 가져옵니다
+              console.log('@@@@@@@');
+              console.log(messageContent);
+              console.log(senderName);
+              const messageElement = document.createElement('div');
+              messageElement.className = 'message';
+
+              // 메시지 내용과 발신자 이메일을 표시
+              messageElement.textContent = `${senderName}: ${messageContent}`;
+              messagesDiv.appendChild(messageElement);
+
+              // 스크롤을 최신 메시지로 이동
+              messagesDiv.scrollTop = messagesDiv.scrollHeight;
+          });
+      });
+
+      // 서버로 메시지 보내기
+      function sendMessage() {
+          const messageInput = document.getElementById('messageInput');
+          const messageContent = messageInput.value.trim();
+
+          if (messageContent) {
+              const message = {
+                  "message": messageContent,
+                  "senderName": window.user.name
+              };
+              stompClient.send("/publish/12", {}, JSON.stringify(message));
+              messageInput.value = ''; // 입력창 비우기
+          }
+      }
+
+      // Enter 키로 메시지 전송
+      document.getElementById('messageInput').addEventListener('keypress', function(e) {
+          if (e.key === 'Enter') {
+              sendMessage();
+          }
+      });
+    </script>
+  </body>
+</html>

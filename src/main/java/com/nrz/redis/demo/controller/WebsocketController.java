@@ -24,7 +24,7 @@ public class WebsocketController {
 
         log.info("pub room ID: {}", message.getRoomId());
         log.info("pub message: {}", message.getMessage());
-        log.info("pub email: {}", message.getSenderEmail());
+        log.info("pub name: {}", message.getSenderName());
         pubSubService.publish("room"+roomId, msg);
     }
 }

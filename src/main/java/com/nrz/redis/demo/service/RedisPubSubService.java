@@ -30,7 +30,7 @@ public class RedisPubSubService implements MessageListener {
             ChatMessageDto dto = om.readValue(payload, ChatMessageDto.class);
             log.info("sub room ID: {}", dto.getRoomId());
             log.info("sub message: {}", dto.getMessage());
-            log.info("sub email: {}", dto.getSenderEmail());
+            log.info("sub name: {}", dto.getSenderName());
             simpMessageSendingOperations.convertAndSend("/topic/"+dto.getRoomId(), dto);
         }catch (JsonProcessingException e){
             throw new RuntimeException(e);
