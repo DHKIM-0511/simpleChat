@@ -8,10 +8,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.listener.PatternTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 
 @Configuration
 public class RedisConfig {
@@ -57,5 +59,14 @@ public class RedisConfig {
     public MessageListenerAdapter messageListenerAdapter(RedisPubSubService redisPubSubService){
 //        RedisPubSubService의 특정 메서드가 수신된 메시지를 처리할수 있도록 지정
         return new MessageListenerAdapter(redisPubSubService, "onMessage");
+    }
+
+    @Bean
+    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, Object> template = new RedisTemplate<>();
+        template.setConnectionFactory(connectionFactory);
+
+        template.setDefaultSerializer(new GenericJackson2JsonRedisSerializer());
+        return template;
     }
 }
